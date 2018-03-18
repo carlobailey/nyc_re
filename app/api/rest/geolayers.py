@@ -1,37 +1,46 @@
 from flask import send_from_directory
-from app.api.rest.base import BaseResource, SecureResource, rest_resource
+# from app.api.rest.base import BaseResource, SecureResource, rest_resource
 import json
+from flask_restplus import Resource, abort, reqparse
+
+from app.api import api_rest
+from cartosight import GeoLayers
 
 
-@rest_resource
-class TestingTestTesting(BaseResource):
-	""" /api/testing/testy """
+@api_rest.route('/testing/testy')
+class TestingTestTesting(Resource):
+    """ /api/testing/testy """
 
-	endpoints = ['/testing/testy']
+    endpoints = []
 
-	def get(self):
-		print('getting data')
-		return {'result': 'testing'}
+    def get(self):
+        print('getting data')
+        return {'result': 'testing'}
 
 
-@rest_resource
-class geoData(BaseResource):
-	""" /api/testing/testy """
+@api_rest.route('/geodata/layers')
+class geoData(Resource):
+    """ /api/testing/testy """
 
-	endpoints = ['/geodata/layers/<string:layer_type>']
+    def get(self):
+        g = GeoLayers()
+        parser = reqparse.RequestParser()
+        parser.add_argument('type', type=str, required=True,
+                            help='Type required to retreive layers')
+        parser.add_argument('column', type=str, required=False,
+                            help='Desired column name required')
+        args = parser.parse_args()
 
-	def get(self, layer_type):
-		if layer_type == 'zip':
-			print('zips worked')
-			path = '../../../playground/data/'
-			file = 'appdata_zips_180316.geojson'
-			print(send_from_directory(path, file))
-			# print(type(layer_type))
-			return send_from_directory(path, file)
+        if args['type'] == 'zip':
+            return g.filter_zip(args['column'])
+        if args['type'] == 'coord':
+            return g.filter_zip('fufof')
 
-		if layer_type == 'coord':
-			print('coords worked')
-			path = '../../../playground/data/'
-			file = 'appdata_coords_0316.geojson'
-			return send_from_directory(path, file)
-		
+@api_rest.route('/geodata/styling')
+class geoStyle(Resource):
+
+    def get(self):
+        g = GeoLayers()
+        return g.styler()
+
+        
