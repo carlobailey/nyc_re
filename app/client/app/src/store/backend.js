@@ -3,7 +3,7 @@ import axios from 'axios'
 
 let $backend = axios.create({
     baseURL: 'http://127.0.0.1:5000/api/',
-    timeout: 7500,
+    timeout: 50000,
     headers: {'Content-Type': 'application/json'}
 })
 
@@ -21,10 +21,10 @@ export default {
       .then(response => response.data)
   },
 
-  fetchResourceTwo (resourceId) {
-    return $backend.get(`resource/two/${resourceId}`)
-      .then(response => response.data)
-  },
+  // fetchResourceTwo (resourceId) {
+  //   return $backend.get(`resource/two/${resourceId}`)
+  //     .then(response => response.data)
+  // },
 
   fetchTestingTesty (callback) {
     console.log('made it to this point')
@@ -37,10 +37,19 @@ export default {
 
   fetchGeoLayers (input, callback) {
     console.log('Fetching Geo Layers')
-    $backend.get(`/geodata/layers/zip`)
+    $backend.get(`/geodata/layers?type=`+input.type+'&column='+input.column)
       .then(response => {
         console.log('Got Geo Layers')
-        return callback(response.data)
+        return callback(JSON.parse(response.data))
+      })
+    },
+
+  fetchStyling (callback) {
+    console.log('Fetching styling')
+    $backend.get(`/geodata/styling`)
+      .then(response => {
+        console.log('Got Styling')
+        return callback(JSON.parse(response.data))
       })
     }
 }

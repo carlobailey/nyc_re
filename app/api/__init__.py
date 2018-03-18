@@ -2,15 +2,18 @@
 
 import os
 from flask import Flask, Blueprint, session
-from flask_restful import Api
+from flask_restplus import Api
 
 api_bp = Blueprint('api_bp', __name__,
                    template_folder='templates',
-                   url_prefix='/api')
+                   url_prefix='/api',
+                   static_folder='static')
 
-api_rest = Api(api_bp)
+api_rest = Api(api_bp, doc='/docs/',
+               version='0.1.0',
+               description='NYC RE API')
 
-# OPTIONAL
+#OPTIONAL
 @api_bp.after_request
 def add_header(response):
     # Required for vue app served from localhost to access 127.0.0.1:5000
