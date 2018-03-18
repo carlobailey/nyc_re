@@ -6,12 +6,15 @@ http://flask-restful.readthedocs.io/en/latest/
 
 import time
 from flask import request
-from app.api.rest.base import BaseResource, SecureResource, rest_resource
+# from app.api.rest.base import BaseResource, SecureResource, rest_resource
+from flask_restplus import Resource, abort, reqparse
 
-@rest_resource
-class ResourceOne(BaseResource):
+from app.api import api_rest, api_bp
+
+@api_rest.route('/resource/one')
+class ResourceOne(Resource):
     """ /api/resource/one """
-    endpoints = ['/resource/one']
+    endpoints = []
 
     def get(self):
         time.sleep(1)
@@ -22,12 +25,16 @@ class ResourceOne(BaseResource):
         return {'name': 'Resource Post'}
 
 
-@rest_resource
-class SecureResourceOne(SecureResource):
+@api_rest.route('/resource/two')
+class SecureResourceOne(Resource):
     """ /api/resource/two """
-    endpoints = ['/resource/two/<string:resource_id>']
+    endpoints = []
 
     def get(self, resource_id):
-        time.sleep(1)
-        return {'name': 'Resource Two', 'data': resource_id}
+        parser = reqparse.RequestParser()
+        parser.add_argument('data', type=str, required=True,
+                            help='this is a resource test')
+        args = parser.parse_args()
+
+        return {'name': 'Resource Two', 'data': args['data']}
 
