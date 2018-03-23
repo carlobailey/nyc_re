@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import router from './router.js'
 import store from './store'
+import Buefy from 'buefy';
 
 import './filters.js'
 import Mixins from './mixins.js'
