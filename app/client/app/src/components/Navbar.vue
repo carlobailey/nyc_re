@@ -1,11 +1,8 @@
 <template>
   <nav class="navbar" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
-      <a class="navbar-item" href="#">
-        <img src="../assets/img/logo.png">
-      </a>
-      <a class="navbar-item" href="#">
-        Flask-Vue
+      <a class="bigFont cleanBorder" id="titleBlock">
+        Open NYC house price model
       </a>
     </div>
     <div class="navbar-menu">

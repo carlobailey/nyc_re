@@ -1,34 +1,47 @@
 <template>
-  <section>
+  <section style="height=100%">
 
     <div class="card">
       <header class="card-header">
-        <p class="card-header-title">
-          Testing Page One
-        </p>
+          <div>
+            <div class="dropdown"
+              v-bind:class="{ 'is-active': isActive }"
+              v-on:click="isActive = !isActive">
+              <div class="dropdown-trigger">
+                <button class="button smallFont is-small" aria-haspopup="true" aria-controls="dropdown-menu">
+                  <span>Select Dataset</span>
+                  <span class="icon is-small">
+                    <i class="fas fa-angle-down" aria-hidden="true"></i>
+                  </span>
+                </button>
+              </div>
+              <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                <div class="dropdown-content" style="max-height: 200px; overflow-y: scroll;">
+                    <a v-for="item in columns" :key="item" class="dropdown-item" @click="fetchGeoLayers({'type': 'zip', 'column': item})">
+                      {{ item }}
+                    </a>
+                </div>
+              </div>
+            </div>
+        </div>
+        <div id="indicator">
+          <p class="smallFont">{{ selectedData }}</p>
+        </div>
       </header>
       <div class="card-content">
         <div class="content">
-          Content
-          <div>{{ resource }}</div>
-        </div>
-      </div>
-
-      <div class="card-content">
-        <div class="content">
-          Test Location
-          <!-- <div>{{ test }}</div> -->
-          <!-- <div id="mapid">
-            <v-map :zoom=13 :center="[40.7128, -74.0060]" ref="map">
-              <v-tilelayer url="https://server.arcgisonline.com/arcgis/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}"></v-tilelayer>
-              <v-polygon :lat-lngs="[
-                                  [51.509, -0.08],
-                                  [51.503, -0.06],
-                                  [51.51, -0.047]]"></v-polygon>
-              <v-geojson :geojson="geojson" ref="geo"></v-geojson> 
-            </v-map>
-          </div> -->
-          <div id="mapid" class="map"></div>
+          <div class="columns">
+            <div class="column is-10">
+              <div id="mapid" class="map"></div>
+            </div>
+            <div class="column is-2">
+              <div id="legendContainer"></div>
+              <div v-for="thing in legendLabels" :key="thing.color">
+                <div class="box" v-bind:style="{ 'background-color': thing.color }"></div>
+                  <span class="legendFont">{{ thing.label }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -39,7 +52,6 @@
 <script>
 
 import backend from '../store/backend'
-import Vue2Leaflet from 'vue2-leaflet'
 import 'leaflet'
 
 const L = window.L
@@ -47,23 +59,35 @@ const L = window.L
 export default {
   name: 'CustomComponent',
   components: {
-    'v-map': Vue2Leaflet.Map,
-    'v-tilelayer': Vue2Leaflet.TileLayer,
-    'v-marker': Vue2Leaflet.Marker,
-    'v-polygon': Vue2Leaflet.Polygon,
-    'v-geojson': Vue2Leaflet.GeoJSON
   },
   data () {
     return {
+      isActive: false,
       map: null,
       tileLayer: null,
       geojson: null,
-      layers: []
+      columns: [],
+      selectedData: null,
+      legendLabels: []
     }
   },
   methods: {
+    legendMaker (colorList) {
+    },
+    fetchColumnNames () {
+      var self = this
+      backend.fetchColumnNames(function (respData) {
+        var val = respData
+        self.columns = val
+      })
+      console.log(this.columns)
+    },
     initMap () {
-      this.map = L.map('mapid').setView([40.7128, -74.0060], 12)
+      // TO DO: optimize with vectorgrid
+      this.map = L.map('mapid', {
+        preferCanvas: true,
+        minZoom: 8,
+        maxZoom: 16}).setView([40.7128, -74.0060], 12)
       this.tileLayer = L.tileLayer('https://server.arcgisonline.com/arcgis/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}')
       this.tileLayer.addTo(this.map)
     },
@@ -80,12 +104,12 @@ export default {
       })
     },
     fetchGeoLayers (inputs) {
-      console.log('leaf works')
-      console.log(L)
+      this.selectedData = inputs.column
       var self = this
       backend.fetchGeoLayers(inputs, function (respData) {
         var geo = respData
-        var values = geo.features.map(function (i) { return i.properties.total_parks })
+        console.log(geo.features)
+        var values = geo.features.map(function (i) { return i.properties[inputs.column] })
         var min = Math.min(...values)
         var max = Math.max(...values)
         var valueRanges = []
@@ -95,36 +119,58 @@ export default {
             valueRanges.push(i)
           }
         }
-        function getColor (d, arr) {
-          return d > arr[5] ? '#800026'
-            : d > arr[4] ? '#BD0026'
-              : d > arr[3] ? '#E31A1C'
-                : d > arr[2] ? '#FC4E2A'
-                  : d > arr[1] ? '#FD8D3C'
-                    : d > arr[0] ? '#FEB24C'
+        function getColor (d) {
+          return d > valueRanges[5] ? '#800026'
+            : d > valueRanges[4] ? '#BD0026'
+              : d > valueRanges[3] ? '#E31A1C'
+                : d > valueRanges[2] ? '#FC4E2A'
+                  : d > valueRanges[1] ? '#FD8D3C'
+                    : d > valueRanges[0] ? '#FEB24C'
                       : d > 0 ? '#FED976'
                         : '#FFEDA0'
         }
         function style (feature) {
           return {
-            fillColor: getColor(feature.properties.total_parks, valueRanges),
+            fillColor: getColor(feature.properties[inputs.column], valueRanges),
             weight: 0.75,
             opacity: 1,
             color: 'white',
             fillOpacity: 0.7
           }
         }
-        self.geojson = L.geoJSON(geo, {style: style})
-        self.geojson.addTo(self.map)
-      })
-      // console.log(this.$refs.geo)
-    },
-    fetchStyling () {
-      var self = this
-      backend.fetchStyling(function (respData) {
-        var val = respData
-        self.options = val
-        console.log(val)
+        self.map.eachLayer(function (layer) {
+          if (layer !== self.tileLayer) {
+            self.map.removeLayer(layer)
+          }
+        })
+        // var test
+        if (inputs.type === 'coordinates') {
+          L.geoJSON(geo, {
+            pointToLayer: function (feature, latlng) {
+              return new L.CircleMarker(latlng, {
+                radius: 8,
+                fillOpacity: 0.4,
+                color: 'white',
+                fillColor: getColor(feature.properties[inputs.column]),
+                weight: 1})
+            }
+          }).addTo(self.map)
+        } else {
+          self.geojson = L.geoJSON(geo, {style: style})
+          self.geojson.addTo(self.map)
+        }
+        var colorList = ['#FFEDA0', '#FED976', '#FEB24C', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026']
+        var grades = valueRanges
+        // TO DO: fix last item in legend
+        grades.unshift(0)
+        // FIX THIS: temp solution to have dynamic legend
+        self.legendLabels = []
+        for (var j = 0; j < grades.length - 1; j++) {
+          if (grades[j + 1] === undefined) {
+            self.legendLabels.push({'color': colorList[j], 'label': grades[j] + ' +'})
+          }
+          self.legendLabels.push({'color': colorList[j], 'label': grades[j] + ' -- ' + grades[j + 1]})
+        }
       })
     }
   },
@@ -134,25 +180,22 @@ export default {
       return this.$store.state.resource
     }
   },
-  watch: {
-    options: function () {
-      let self = this
-      backend.fetchStyling(function (respData) {
-        var val = respData
-        self.options = val
-        console.log(val)
-      })
-    }
-  },
   mounted () {
     this.initMap()
     this.initLayers()
     this.fetchGeoLayers({'type': 'zip', 'column': 'total_parks'})
+  },
+  created () {
+    this.fetchColumnNames()
   }
 }
 </script>
 
 <style lang="sass" scoped>
-#mapid { height: 500px; }
+.card {border-color: white !important; box-shadow: none;}
+.card-content {padding: 0.5em;}
+.card-header {border-color: white !important; box-shadow: none; padding: 0.4em;}
+.box {display: inline-block; height: 10px !important; width: 10px !important; opacity: 0.75; border-radius: 0px; box-shadow: none; margin-bottom: 2px !important;}
+.button {border-radius: 0px !important;}
 
 </style>
