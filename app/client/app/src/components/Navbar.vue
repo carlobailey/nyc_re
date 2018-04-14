@@ -2,7 +2,8 @@
   <nav class="navbar" role="navigation" aria-label="main navigation">
     <div class="navbar-brand">
       <a class="bigFont cleanBorder" id="titleBlock">
-        Open NYC house price model
+        <!-- Open NYC house price model -->
+        Open Source NYC Real Estate
       </a>
     </div>
     <div class="navbar-menu">

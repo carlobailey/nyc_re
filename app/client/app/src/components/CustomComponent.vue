@@ -5,6 +5,28 @@
       <header class="card-header">
           <div>
             <div class="dropdown"
+              v-bind:class="{ 'is-active': isActive2 }"
+              v-on:click="isActive2 = !isActive2">
+              <div class="dropdown-trigger">
+                <button class="button smallFont is-small" aria-haspopup="true" aria-controls="dropdown-menu">
+                  <span>Level of detail</span>
+                  <span class="icon is-small">
+                    <i class="fas fa-angle-down" aria-hidden="true"></i>
+                  </span>
+                </button>
+              </div>
+              <div class="dropdown-menu" id="dropdown-menu" role="menu">
+                <div class="dropdown-content" style="max-height: 200px; overflow-y: scroll;">
+                    <a v-for="item in LoD" :key="item" class="dropdown-item"
+                    @click="selectedDetail=item">
+                      {{ item }}
+                    </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="dropdown"
               v-bind:class="{ 'is-active': isActive }"
               v-on:click="isActive = !isActive">
               <div class="dropdown-trigger">
@@ -17,15 +39,12 @@
               </div>
               <div class="dropdown-menu" id="dropdown-menu" role="menu">
                 <div class="dropdown-content" style="max-height: 200px; overflow-y: scroll;">
-                    <a v-for="item in columns" :key="item" class="dropdown-item" @click="fetchGeoLayers({'type': 'zip', 'column': item})">
+                    <a v-for="item in columns" :key="item" class="dropdown-item" @click="fetchGeoLayers({'type': selectedDetail, 'column': item})">
                       {{ item }}
                     </a>
                 </div>
               </div>
             </div>
-        </div>
-        <div id="indicator">
-          <p class="smallFont">{{ selectedData }}</p>
         </div>
       </header>
       <div class="card-content">
@@ -34,11 +53,19 @@
             <div class="column is-10">
               <div id="mapid" class="map"></div>
             </div>
-            <div class="column is-2">
-              <div id="legendContainer"></div>
-              <div v-for="thing in legendLabels" :key="thing.color">
-                <div class="box" v-bind:style="{ 'background-color': thing.color }"></div>
-                  <span class="legendFont">{{ thing.label }}</span>
+            <div class="column is-2" v-if="legendLabels !== null">
+              <div id="legendContainer" class="card">
+                <div class="card-header" style="background-color: black;">
+                  <strong style="color: white;">{{ selectedData }}</strong>
+                </div>
+                <div class="card-content">
+                  <div class="content">
+                    <div v-for="thing in legendLabels" :key="thing.color">
+                      <div class="valueBox" v-bind:style="{ 'background-color': thing.color }"></div>
+                        <span class="legendFont">{{ thing.label }}</span>
+                      </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -62,31 +89,42 @@ export default {
   },
   data () {
     return {
+      // FiX this
       isActive: false,
+      isActive2: false,
       map: null,
       tileLayer: null,
       geojson: null,
       columns: [],
       selectedData: null,
-      legendLabels: []
+      legendLabels: null,
+      LoD: ['zip', 'coordinates'],
+      selectedDetail: null
+    }
+  },
+  watch: {
+    selectedDetail: function (newValue) {
+      let self = this
+      backend.fetchColumnNames(newValue, function (respData) {
+        self.columns = respData
+      })
     }
   },
   methods: {
     legendMaker (colorList) {
     },
-    fetchColumnNames () {
+    fetchColumnNames (input) {
       var self = this
-      backend.fetchColumnNames(function (respData) {
+      backend.fetchColumnNames(input, function (respData) {
         var val = respData
         self.columns = val
       })
-      console.log(this.columns)
     },
     initMap () {
       // TO DO: optimize with vectorgrid
       this.map = L.map('mapid', {
         preferCanvas: true,
-        minZoom: 8,
+        minZoom: 2,
         maxZoom: 16}).setView([40.7128, -74.0060], 12)
       this.tileLayer = L.tileLayer('https://server.arcgisonline.com/arcgis/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}')
       this.tileLayer.addTo(this.map)
@@ -183,19 +221,21 @@ export default {
   mounted () {
     this.initMap()
     this.initLayers()
-    this.fetchGeoLayers({'type': 'zip', 'column': 'total_parks'})
+    // this.fetchGeoLayers({'type': 'coordinates', 'column': 'total_parks'})
   },
   created () {
-    this.fetchColumnNames()
+    // this.fetchColumnNames({'detail': 'zip'})
   }
 }
 </script>
 
 <style lang="sass" scoped>
-.card {border-color: white !important; box-shadow: none;}
 .card-content {padding: 0.5em;}
 .card-header {border-color: white !important; box-shadow: none; padding: 0.4em;}
-.box {display: inline-block; height: 10px !important; width: 10px !important; opacity: 0.75; border-radius: 0px; box-shadow: none; margin-bottom: 2px !important;}
+.valueBox {display: inline-block; height: 20px !important; width: 20px !important; opacity: 0.75; border-radius: 0px; box-shadow: none; margin-bottom: 2px !important;}
 .button {border-radius: 0px !important;}
+.legend {line-height: 18px; color: #555; }
+.legend i {width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.7; }
+.box {border-radius: 0px;}
 
 </style>

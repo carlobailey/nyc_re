@@ -44,9 +44,9 @@ export default {
       })
     },
 
-  fetchColumnNames (callback) {
+  fetchColumnNames (input, callback) {
     console.log('Fetching column names')
-    $backend.get(`/geodata/column-names`)
+    $backend.get(`/geodata/column-names?detail=`+input)
       .then(response => {
         console.log('Got column names')
         return callback(JSON.parse(response.data))
