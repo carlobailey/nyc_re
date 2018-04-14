@@ -5,7 +5,10 @@ from flask_restplus import Resource, abort, reqparse
 
 from app.api import api_rest
 from cartosight import GeoLayers
+from cartosight import Explorer
 
+g = GeoLayers()
+e = Explorer()
 
 @api_rest.route('/testing/testy')
 class TestingTestTesting(Resource):
@@ -23,7 +26,6 @@ class geoData(Resource):
     """ /api/testing/testy """
 
     def get(self):
-        g = GeoLayers()
         parser = reqparse.RequestParser()
         parser.add_argument('type', type=str, required=True,
                             help='Type required to retreive layers')
@@ -33,14 +35,27 @@ class geoData(Resource):
 
         if args['type'] == 'zip':
             return g.filter_zip(args['column'])
-        if args['type'] == 'coord':
-            return g.filter_zip('fufof')
+        if args['type'] == 'coordinates':
+            return g.point_data(args['column'])
 
-@api_rest.route('/geodata/styling')
-class geoStyle(Resource):
+
+@api_rest.route('/geodata/column-names')
+class columnNames(Resource):
 
     def get(self):
-        g = GeoLayers()
-        return g.styler()
+        parser = reqparse.RequestParser()
+        parser.add_argument('detail', type=str, required=True,
+                            help='Detail required to retreive layers')
+        args = parser.parse_args()
+        return g.col_names(args['detail'])
 
-        
+
+@api_rest.route('/features/correlation')
+class correlation(Resource):
+
+    def get(self):
+        # parser = reqparse.RequestParser()
+        # parser.add_argument('detail', type=str, required=True,
+        #                     help='Detail required to retreive layers')
+        # args = parser.parse_args()
+        return e.scatter()
