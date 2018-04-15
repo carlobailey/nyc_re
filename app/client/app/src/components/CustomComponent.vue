@@ -50,10 +50,10 @@
       <div class="card-content">
         <div class="content">
           <div class="columns">
-            <div class="column is-10">
+            <div class="column is-9">
               <div id="mapid" class="map"></div>
             </div>
-            <div class="column is-2" v-if="legendLabels !== null">
+            <div class="column is-3" v-if="legendLabels !== null">
               <div id="legendContainer" class="card">
                 <div class="card-header" style="background-color: black;">
                   <strong style="color: white;">{{ selectedData }}</strong>
@@ -64,6 +64,13 @@
                       <div class="valueBox" v-bind:style="{ 'background-color': thing.color }"></div>
                         <span class="legendFont">{{ thing.label }}</span>
                       </div>
+                    <div class="box">
+                      <div class="">
+                        <corr-scatter :canvasId="'corr-scatter'"
+                                    :chartData="corrData">
+                                    </corr-scatter>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -80,12 +87,14 @@
 
 import backend from '../store/backend'
 import 'leaflet'
+import scatter from '../components/charts/scatter'
 
 const L = window.L
 
 export default {
   name: 'CustomComponent',
   components: {
+    'corr-scatter': scatter
   },
   data () {
     return {
@@ -99,7 +108,34 @@ export default {
       selectedData: null,
       legendLabels: null,
       LoD: ['zip', 'coordinates'],
-      selectedDetail: null
+      selectedDetail: null,
+      corrData: [{
+        label: 'Actual Revenue',
+        data: [{
+          x: 0.1,
+          y: 0.3
+        }, {
+          x: 0.5,
+          y: 0.2
+        }, {
+          x: 0.6,
+          y: 0.9
+        }, {
+          x: 0.1,
+          y: 0.1
+        }, {
+          x: 0.10,
+          y: 0.10
+        }, {
+          x: 0.9,
+          y: 0.7
+        }, {
+          x: 0.4,
+          y: 0.5
+        }],
+        borderColor: '#7FAACC',
+        backgroundColor: '#7FAACC'
+      }]
     }
   },
   watch: {
@@ -146,7 +182,7 @@ export default {
       var self = this
       backend.fetchGeoLayers(inputs, function (respData) {
         var geo = respData
-        console.log(geo.features)
+        // console.log(geo.features)
         var values = geo.features.map(function (i) { return i.properties[inputs.column] })
         var min = Math.min(...values)
         var max = Math.max(...values)
