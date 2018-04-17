@@ -54,8 +54,11 @@ class columnNames(Resource):
 class correlation(Resource):
 
     def get(self):
-        # parser = reqparse.RequestParser()
-        # parser.add_argument('detail', type=str, required=True,
-        #                     help='Detail required to retreive layers')
-        # args = parser.parse_args()
-        return e.scatter()
+        parser = reqparse.RequestParser()
+        parser.add_argument('column', type=str, required=True,
+                            help='Column required for correlation',
+                            location=['headers', 'values', 'args'])
+        args = parser.parse_args()
+        return e.scatter(args['column'])
+
+
