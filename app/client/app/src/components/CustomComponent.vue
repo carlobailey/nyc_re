@@ -67,7 +67,8 @@
                     <div class="box">
                       <div class="">
                         <corr-scatter :canvasId="'corr-scatter'"
-                                    :chartData="corrData">
+                                    :chartData="corrData"
+                                    :chartTitle="corrTitle">
                                     </corr-scatter>
                       </div>
                     </div>
@@ -109,33 +110,8 @@ export default {
       legendLabels: null,
       LoD: ['zip', 'coordinates'],
       selectedDetail: null,
-      corrData: [{
-        label: 'Actual Revenue',
-        data: [{
-          x: 0.1,
-          y: 0.3
-        }, {
-          x: 0.5,
-          y: 0.2
-        }, {
-          x: 0.6,
-          y: 0.9
-        }, {
-          x: 0.1,
-          y: 0.1
-        }, {
-          x: 0.10,
-          y: 0.10
-        }, {
-          x: 0.9,
-          y: 0.7
-        }, {
-          x: 0.4,
-          y: 0.5
-        }],
-        borderColor: '#7FAACC',
-        backgroundColor: '#7FAACC'
-      }]
+      corrData: null,
+      corrTitle: null
     }
   },
   watch: {
@@ -180,6 +156,18 @@ export default {
     fetchGeoLayers (inputs) {
       this.selectedData = inputs.column
       var self = this
+      backend.fetchCorrelations(inputs.column, function (respData) {
+        self.corrData = [{
+          label: 'Test',
+          data: respData,
+          pointBorderColor: '#fff',
+          pointBackgroundColor: '#990000'
+        }]
+        self.corrTitle = {
+          display: true,
+          text: 'Price vs ' + inputs.column
+        }
+      })
       backend.fetchGeoLayers(inputs, function (respData) {
         var geo = respData
         // console.log(geo.features)
@@ -272,6 +260,6 @@ export default {
 .button {border-radius: 0px !important;}
 .legend {line-height: 18px; color: #555; }
 .legend i {width: 18px; height: 18px; float: left; margin-right: 8px; opacity: 0.7; }
-.box {border-radius: 0px;}
+.box {border-radius: 0px; padding: 0.5em;}
 
 </style>

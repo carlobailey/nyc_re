@@ -7,7 +7,7 @@ import { watchData } from './base'
 import Chart from 'chart.js'
 export default {
   name: 'BarChart',
-  props: ['chartData', 'canvasId'],
+  props: ['chartData', 'canvasId', 'chartTitle'],
   mixins: [watchData],
   data () {
     return {
@@ -21,10 +21,7 @@ export default {
         datasets: this.chartData
       },
       options: {
-        title: {
-          display: true,
-          text: 'This is temp'
-        },
+        title: this.chartTitle,
         scales: {
           xAxes: [{
             type: 'linear',

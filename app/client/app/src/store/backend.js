@@ -51,5 +51,14 @@ export default {
         console.log('Got column names')
         return callback(JSON.parse(response.data))
       })
+    },
+
+  fetchCorrelations (input, callback) {
+    console.log('Fetching scatter data')
+    $backend.get(`/features/correlation?column=`+input)
+      .then(response => {
+        console.log('Got scatter data')
+        return callback(JSON.parse(response.data))
+      })
     }
 }
